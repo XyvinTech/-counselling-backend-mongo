@@ -5,7 +5,7 @@ const authVerify = require("../middlewares/authVerify");
 
 adminRoute.post("/login", adminController.loginAdmin);
 
-adminRoute.use(authVerify);
+// adminRoute.use(authVerify);
 
 adminRoute
   .route("/")

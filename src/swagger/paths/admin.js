@@ -664,19 +664,18 @@
 
 /**
  * @swagger
- * /admin/sessions/{caseId}/case:
+ * /admin/sessions/{id}/case:
  *   get:
  *     summary: Get sessions by case ID
  *     description: Retrieve all sessions associated with a specific case ID.
  *     tags:
  *       - Session
  *     parameters:
- *       - name: caseId
+ *       - name: id
  *         in: path
  *         required: true
  *         schema:
  *           type: string
- *           format: uuid
  *         description: The ID of the case to retrieve sessions for
  *     responses:
  *       200:

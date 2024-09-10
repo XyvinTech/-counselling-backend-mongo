@@ -35,17 +35,20 @@ exports.loginAdmin = async (req, res) => {
       return responseHandler(res, 401, "Invalid password");
     }
 
-    const token = generateToken(user.id);
+    const token = generateToken(user._id);
+    console.log(token)
     return responseHandler(res, 200, "Login successful", {
       token,
       userType,
     });
+    
   } catch (error) {
     return responseHandler(res, 500, `Internal Server Error: ${error.message}`);
   }
 };
 
 exports.createAdmin = async (req, res) => {
+  console.log("Admin create Hitted")
   try {
     const createAdminValidator = validations.createAdminSchema.validate(
       req.body,
@@ -124,7 +127,7 @@ exports.editAdmin = async (req, res) => {
       );
     }
 
-    const updateAdmin = await Admin.update(id, req.body, {
+    const updateAdmin = await Admin.findByIdAndUpdate(id, req.body, {
       new: true,
     });
     if (updateAdmin) {
@@ -830,7 +833,7 @@ exports.deleteEvent = async (req, res) => {
 exports.getCaseSessions = async (req, res) => {
   try {
     const { caseId } = req.params;
-    const sessions = await Session.findAllByCaseId(caseId);
+    const sessions = await Session.findById(caseId);
     if (sessions.length > 0) {
       return responseHandler(res, 200, "Sessions found", sessions);
     }
@@ -980,7 +983,7 @@ exports.deleteCounsellingType = async (req, res) => {
 
 exports.getBigCalender = async (req, res) => {
   try {
-    const events = await Event.findAllForCalender();
+    const events = await Event.find();
     if (events.length > 0) {
       const mappedData = events.map((event) => {
         return {

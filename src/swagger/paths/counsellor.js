@@ -190,7 +190,6 @@
  *         required: true
  *         schema:
  *           type: string
- *           format: uuid
  *         description: ID of the session to accept
  *     responses:
  *       200:
@@ -238,7 +237,6 @@
  *         required: true
  *         schema:
  *           type: string
- *           format: uuid
  *         description: The ID of the case to update
  *     requestBody:
  *       required: true
@@ -286,19 +284,18 @@
 
 /**
  * @swagger
- * /counsellor/sessions/{caseId}:
+ * /counsellor/sessions/{id}:
  *   get:
  *     summary: Get sessions by case ID
  *     description: Retrieve all sessions associated with a specific case ID.
  *     tags:
  *       - Session
  *     parameters:
- *       - name: caseId
+ *       - name: id
  *         in: path
  *         required: true
  *         schema:
  *           type: string
- *           format: uuid
  *         description: The ID of the case to retrieve sessions for
  *     responses:
  *       200:
@@ -323,7 +320,6 @@
  *         required: true
  *         schema:
  *           type: string
- *           format: uuid
  *         description: The ID of the session to retrieve
  *     responses:
  *       200:
@@ -348,7 +344,6 @@
  *         required: true
  *         schema:
  *           type: string
- *           format: uuid
  *         description: ID of the session to reschedule
  *     requestBody:
  *       required: true
@@ -390,7 +385,6 @@
  *         required: true
  *         schema:
  *           type: string
- *           format: uuid
  *         description: ID of the counsellor
  *       - name: day
  *         in: query
@@ -422,7 +416,6 @@
  *         required: true
  *         schema:
  *           type: string
- *           format: uuid
  *         description: The ID of the session to cancel
  *     responses:
  *       200:
@@ -538,7 +531,6 @@
  *         required: true
  *         schema:
  *           type: string
- *           format: uuid
  *         description: ID of the notification to be marked as read
  *     responses:
  *       200:
@@ -652,7 +644,6 @@
  *         required: true
  *         schema:
  *           type: string
- *           format: uuid
  *         description: ID of the event to be edited
  *     requestBody:
  *       required: true
@@ -707,7 +698,6 @@
  *         required: true
  *         schema:
  *           type: string
- *           format: uuid
  *         description: ID of the event to be deleted
  *     responses:
  *       200:
@@ -766,7 +756,6 @@
  *         required: true
  *         schema:
  *           type: string
- *           format: uuid
  *         description: ID of the case to update with a new referee remark
  *     requestBody:
  *       required: true

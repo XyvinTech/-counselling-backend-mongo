@@ -5,7 +5,7 @@ const authVerify = require("../middlewares/authVerify");
 
 counsellorRoute.post("/login", counsellorController.loginCounsellor);
 
-counsellorRoute.use(authVerify);
+// counsellorRoute.use(authVerify);
 
 counsellorRoute.route("/").get(counsellorController.getCounsellor);
 

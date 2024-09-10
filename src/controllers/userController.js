@@ -95,13 +95,218 @@ exports.updateStudent = async (req, res) => {
   }
 };
 
+// exports.createSession = async (req, res) => {
+//   try {
+//     const createSessionValidator = validations.createSessionSchema.validate(
+//       req.body,
+//       {
+//         abortEarly: true,
+//       }
+//     );
+//     if (createSessionValidator.error) {
+//       return responseHandler(
+//         res,
+//         400,
+//         `Invalid input: ${createSessionValidator.error}`
+//       );
+//     }
+
+//     req.body.user = req.userId;
+//     const session = await Session.create(req.body);
+
+//     const sessions = [session.id];
+//     const caseId = await Case.create({
+//       user: req.userId,
+//       sessions,
+//     });
+
+//     const newSession = await Session.findById(session.id);
+
+//     session.case_id = caseId.id;
+//     const emailData = {
+//       to: session.user_email,
+//       subject: `Your session requested with Session ID: ${newSession.session_id} and Case ID: ${caseId.case_id} for ${session.counsellor_name}`,
+//       text: `Dear ${session.user_name},\n\nYour appointment request for ${
+//         session.counsellor_name
+//       } for ${moment(session.session_date).format("DD-MM-YYYY")} at ${
+//         session.session_time.start
+//       }-${
+//         session.session_time.end
+//       } has been sent to the Counselor for approval. We will inform you through an email once your request has been approved by the Counselor.`,
+//     };
+//     await sendMail(emailData);
+//     const data = {
+//       user: req.userId,
+//       caseId: caseId.id,
+//       session: session.id,
+//       details: "Your session has been requested. Please wait for approval",
+//     };
+//     await Notification.create(data);
+//     const notif_data = {
+//       user: session.counsellor,
+//       caseId: caseId.id,
+//       session: session.id,
+//       details: "New session requested",
+//     };
+//     const counData = {
+//       to: session.counsellor_email,
+//       subject: `You have a new session requested with Session ID: ${newSession.session_id} and Case ID: ${caseId.case_id} from ${session.user_name}`,
+//       text: `Dear ${
+//         session.counsellor_name
+//       },\n\nYou have received an appointment request from ${
+//         session.user_name
+//       } for ${moment(session.session_date).format("DD-MM-YYYY")} at ${
+//         session.session_time.start
+//       }-${
+//         session.session_time.end
+//       }. The request has been sent to you for approval. We will notify you via email once the request has been approved.`,
+//     };
+//     await sendMail(counData);
+//     await Notification.create(notif_data);
+
+//     if (!session) {
+//       return responseHandler(res, 400, `Session creation failed`);
+//     }
+//     return responseHandler(res, 201, "Session created successfully", session);
+//   } catch (error) {
+//     return responseHandler(res, 500, `Internal Server Error ${error.message}`);
+//   }
+// };
+
+const generateCaseId = async () => {
+  // Fetch the last created case to determine the highest case ID
+  const lastCase = await Case.findOne().sort({ createdAt: -1 }); // Sorting by creation date to get the latest case
+
+  let newCaseId = "CS_01"; // Default case ID if no cases exist
+
+  // Check if there's a previous case, and increment the case ID number
+  if (lastCase && lastCase.case_id) {
+    const lastCaseIdNumber = parseInt(lastCase.case_id.split("_")[1]); // Extract the numeric part of the case ID
+    const nextCaseIdNumber = String(lastCaseIdNumber + 1).padStart(2, "0"); // Increment and pad the number to two digits
+    newCaseId = `CS_${nextCaseIdNumber}`; // Form the new case ID
+  }
+
+  return newCaseId;
+};
+// Utility function to generate a custom session ID based on existing sessions
+const generateSessionId = async (caseId) => {
+  // Fetch the latest session related to this case and sort by session_id in descending order
+  const latestSession = await Session.findOne({ case_id: caseId })
+    .sort({ session_id: -1 })
+    .exec();
+
+  if (latestSession && latestSession.session_id) {
+    // Extract the number part from the session ID (e.g., SC_1 -> 1)
+    const currentNumber = parseInt(latestSession.session_id.split('_')[1], 10);
+    // Increment the number to create the next session ID
+    return `SC_${currentNumber + 1}`;
+  } else {
+    // If no existing sessions, start with SC_1
+    return 'SC_1';
+  }
+};
+
+
+// exports.createSession = async (req, res) => {
+//   try {
+//     // Validate the input request body
+//     const createSessionValidator = validations.createSessionSchema.validate(
+//       req.body,
+//       { abortEarly: true }
+//     );
+//     if (createSessionValidator.error) {
+//       return responseHandler(
+//         res,
+//         400,
+//         `Invalid input: ${createSessionValidator.error}`
+//       );
+//     }
+
+//     // Set the user ID from the request
+//     req.body.user = req.userId;
+
+//     // Create the session
+//     const session = await Session.create(req.body);
+//     const sessions = [session.id]; // Store the session ID in an array for case creation
+
+//     // Generate a custom case ID
+//     const customCaseId = await generateCaseId();
+
+//     // Create a new case with session references and the custom case ID
+//     const newCase = await Case.create({
+//       user: req.userId,
+//       sessions,
+//       case_id: customCaseId, // Assign the generated case ID
+//       concern_raised: req.body.concern_raised || null,
+//       referer: req.body.referer || null,
+//     });
+
+//     // Update each session with the new case ID and a formatted session ID
+//     for (let index = 0; index < sessions.length; index++) {
+//       const sessionId = sessions[index];
+//       const formattedSessionId = `SC_${String(index + 1).padStart(2, "0")}`;
+
+//       await Session.findByIdAndUpdate(sessionId, {
+//         session_id: formattedSessionId,
+//         case_id: newCase.id,
+//       });
+//     }
+
+//     // Fetch the updated session with its new case ID
+//     const newSession = await Session.findById(session.id);
+
+//     // // Prepare email and notification data
+//     // const emailData = {
+//     //   to: session.user_email,
+//     //   subject: `Your session requested with Session ID: ${newSession.session_id} and Case ID: ${newCase.case_id} for ${session.counsellor_name}`,
+//     //   text: `Dear ${session.user_name},\n\nYour appointment request for ${session.counsellor_name} for ${moment(session.session_date).format("DD-MM-YYYY")} at ${session.session_time.start}-${session.session_time.end} has been sent to the Counselor for approval. We will inform you through an email once your request has been approved by the Counselor.`,
+//     // };
+//     // await sendMail(emailData);
+
+//     // // Create notifications for the user and counsellor
+//     // const userNotificationData = {
+//     //   user: req.userId,
+//     //   caseId: newCase.id,
+//     //   session: session.id,
+//     //   details: "Your session has been requested. Please wait for approval",
+//     // };
+//     // await Notification.create(userNotificationData);
+
+//     // const counsellorNotificationData = {
+//     //   user: session.counsellor,
+//     //   caseId: newCase.id,
+//     //   session: session.id,
+//     //   details: "New session requested",
+//     // };
+//     // await Notification.create(counsellorNotificationData);
+
+//     // // Prepare email for the counsellor
+//     // const counsellorEmailData = {
+//     //   to: session.counsellor_email,
+//     //   subject: `You have a new session requested with Session ID: ${newSession.session_id} and Case ID: ${newCase.case_id} from ${session.user_name}`,
+//     //   text: `Dear ${session.counsellor_name},\n\nYou have received an appointment request from ${session.user_name} for ${moment(session.session_date).format("DD-MM-YYYY")} at ${session.session_time.start}-${session.session_time.end}. The request has been sent to you for approval. We will notify you via email once the request has been approved.`,
+//     // };
+//     // await sendMail(counsellorEmailData);
+
+//     if (!session) {
+//       return responseHandler(res, 400, `Session creation failed`);
+//     }
+
+//     // Return the successful response
+//     return responseHandler(res, 201, "Session created successfully", session);
+//   } catch (error) {
+//     // Handle errors
+//     return responseHandler(res, 500, `Internal Server Error: ${error.message}`);
+//   }
+// };
+
+
 exports.createSession = async (req, res) => {
   try {
+    // Validate the input request body
     const createSessionValidator = validations.createSessionSchema.validate(
       req.body,
-      {
-        abortEarly: true,
-      }
+      { abortEarly: true }
     );
     if (createSessionValidator.error) {
       return responseHandler(
@@ -111,67 +316,58 @@ exports.createSession = async (req, res) => {
       );
     }
 
+    // Set the user ID from the request
     req.body.user = req.userId;
+
+    // Create the session
     const session = await Session.create(req.body);
-
-    const sessions = [session.id];
-    const caseId = await Case.create({
-      user: req.userId,
-      sessions,
-    });
-
-    const newSession = await Session.findById(session.id);
-
-    session.case_id = caseId.id;
-    const emailData = {
-      to: session.user_email,
-      subject: `Your session requested with Session ID: ${newSession.session_id} and Case ID: ${caseId.case_id} for ${session.counsellor_name}`,
-      text: `Dear ${session.user_name},\n\nYour appointment request for ${
-        session.counsellor_name
-      } for ${moment(session.session_date).format("DD-MM-YYYY")} at ${
-        session.session_time.start
-      }-${
-        session.session_time.end
-      } has been sent to the Counselor for approval. We will inform you through an email once your request has been approved by the Counselor.`,
-    };
-    await sendMail(emailData);
-    const data = {
-      user: req.userId,
-      caseId: caseId.id,
-      session: session.id,
-      details: "Your session has been requested. Please wait for approval",
-    };
-    await Notification.create(data);
-    const notif_data = {
-      user: session.counsellor,
-      caseId: caseId.id,
-      session: session.id,
-      details: "New session requested",
-    };
-    const counData = {
-      to: session.counsellor_email,
-      subject: `You have a new session requested with Session ID: ${newSession.session_id} and Case ID: ${caseId.case_id} from ${session.user_name}`,
-      text: `Dear ${
-        session.counsellor_name
-      },\n\nYou have received an appointment request from ${
-        session.user_name
-      } for ${moment(session.session_date).format("DD-MM-YYYY")} at ${
-        session.session_time.start
-      }-${
-        session.session_time.end
-      }. The request has been sent to you for approval. We will notify you via email once the request has been approved.`,
-    };
-    await sendMail(counData);
-    await Notification.create(notif_data);
-
     if (!session) {
       return responseHandler(res, 400, `Session creation failed`);
     }
-    return responseHandler(res, 201, "Session created successfully", session);
+
+    // Store the session ID in an array for case creation
+    const sessions = [session.id];
+
+    // Generate a custom case ID
+    const customCaseId = await generateCaseId();
+
+    // Create a new case with session references and the custom case ID
+    const newCase = await Case.create({
+      user: req.userId,
+      sessions,
+      case_id: customCaseId, // Assign the generated case ID
+      concern_raised: req.body.concern_raised || null,
+      referer: req.body.referer || null,
+    });
+
+    // Generate a unique session ID for the new session
+    const formattedSessionId = await generateSessionId(newCase.id);
+
+    // Update the session with the new formatted session ID and case ID
+    await Session.findByIdAndUpdate(
+      session.id,
+      {
+        session_id: formattedSessionId,
+        case_id: newCase.id,
+      },
+      { new: true } // Return the updated document
+    );
+
+    // Fetch the updated session with its new case ID
+    const newSession = await Session.findById(session.id);
+
+    // Return the successful response with the updated session data
+    return responseHandler(res, 201, 'Session created successfully', newSession);
   } catch (error) {
-    return responseHandler(res, 500, `Internal Server Error ${error.message}`);
+    // Handle errors
+    return responseHandler(res, 500, `Internal Server Error: ${error.message}`);
   }
 };
+
+
+
+
+
 
 exports.rescheduleSession = async (req, res) => {
   try {
@@ -339,7 +535,7 @@ exports.getAvailableTimes = async (req, res) => {
 exports.getAllCounsellors = async (req, res) => {
   try {
     const { counsellorType } = req.query;
-    const counsellors = await User.findAllCounsellors({ counsellorType });
+    const counsellors = await User.findAll({ counsellorType });
     const mappedData = counsellors.map((counsellor) => {
       return {
         id: counsellor.id,

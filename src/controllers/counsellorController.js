@@ -99,7 +99,7 @@ exports.addTimes = async (req, res) => {
 
 exports.getTimes = async (req, res) => {
   try {
-    const times = await Time.findByUserId(req.userId);
+    const times = await Time.findById(req.userId);
     if (!times) return responseHandler(res, 404, "No times found");
     return responseHandler(res, 200, "Times found", times);
   } catch (error) {
@@ -538,8 +538,8 @@ exports.getAllCounsellors = async (req, res) => {
 
 exports.getCaseSessions = async (req, res) => {
   try {
-    const { caseId } = req.params;
-    const sessions = await Session.findAllByCaseId(caseId);
+    const { id } = req.params;
+    const sessions = await Session.findAllByCaseId(id);
     if (sessions.length > 0) {
       return responseHandler(res, 200, "Sessions found", sessions);
     }

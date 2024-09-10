@@ -539,7 +539,7 @@ const sessionSchema = new mongoose.Schema(
   {
     session_id: {
       type: String,
-      unique: true,
+      // unique: true,
       default: null,
     },
     case_id: {
@@ -552,31 +552,32 @@ const sessionSchema = new mongoose.Schema(
       ref: "User", 
       required: true,
     },
-    start_time: {
+    session_date: {
       type: Date,
-      required: true,
+      default: Date.now,
     },
-    end_time: {
-      type: Date,
-      default: null,
+    session_time: {
+      start : {
+        type: String,
+      },
+      end: {
+        type: String,
+        default: null,
+      },
     },
     status: {
       type: String,
       default: "scheduled",
       enum: ["scheduled", "completed", "cancelled", "in_progress"],
     },
-    remarks: {
+    type: {
       type: String,
       default: "",
     },
-    createdAt: {
-      type: Date,
-      default: Date.now,
-    },
-    updatedAt: {
-      type: Date,
-      default: Date.now,
-    },
+    description : {
+      type : String,
+      default : ""
+    }
   },
   { timestamps: true }
 );

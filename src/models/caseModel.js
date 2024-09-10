@@ -475,10 +475,6 @@ const mongoose = require("mongoose");
 
 const caseSchema = new mongoose.Schema(
   {
-    id: {
-      type: mongoose.Schema.Types.ObjectId,
-      default: () => new mongoose.Types.ObjectId(),
-    },
     case_id: {
       type: String,
       unique: true,
@@ -511,16 +507,8 @@ const caseSchema = new mongoose.Schema(
       default: "pending",
       enum: ["pending", "progress", "cancelled", "completed", "referred"],
     },
-    createdAt: {
-      type: Date,
-      default: Date.now,
-    },
-    updatedAt: {
-      type: Date,
-      default: Date.now,
-    },
     session_ids: {
-      type: [String],
+      type: [mongoose.Schema.Types.ObjectId],
       default: [],
     },
   },
